@@ -64,17 +64,25 @@ function saveIndex(idx) {
 // ── GOOGLE AUTH ───────────────────────────────────────────────────────────────
 function getAuth() {
   var token;
-  // Try env variable first (for production/Render)
-  if (process.env.DRIVE_TOKEN) {
+  // Try base64 encoded token first (safer for env vars)
+  if (process.env.DRIVE_TOKEN_B64) {
     try {
-      token = JSON.parse(process.env.DRIVE_TOKEN);
+      var decoded = Buffer.from(process.env.DRIVE_TOKEN_B64, 'base64').toString('utf8');
+      token = JSON.parse(decoded);
     } catch(e) {
-      throw new Error('DRIVE_TOKEN env variable tiene JSON invalido');
+      throw new Error('DRIVE_TOKEN_B64 invalido: ' + e.message);
+    }
+  } else if (process.env.DRIVE_TOKEN) {
+    try {
+      var raw = process.env.DRIVE_TOKEN.trim();
+      token = JSON.parse(raw);
+    } catch(e) {
+      throw new Error('DRIVE_TOKEN JSON invalido: ' + e.message);
     }
   } else if (fs.existsSync(TOKEN_PATH)) {
     token = JSON.parse(fs.readFileSync(TOKEN_PATH));
   } else {
-    throw new Error('No hay token de Drive. Configura DRIVE_TOKEN en las variables de entorno.');
+    throw new Error('No hay token de Drive. Configura DRIVE_TOKEN_B64 en Render.');
   }
   var auth = new google.auth.OAuth2(
     '363962271835-8tgevb8mlab5st0qm4hdu3kmcgljopkq.apps.googleusercontent.com',
