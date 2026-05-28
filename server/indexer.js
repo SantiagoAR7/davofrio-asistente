@@ -110,13 +110,24 @@ async function downloadPDF(fileId) {
 }
 
 // ── PDF TEXT EXTRACTION ───────────────────────────────────────────────────────
-// Try pdftotext first (better for special fonts), fallback to pdf-parse
+// Check if pdftotext is available (installed locally but not on Render)
+function hasPdftotext() {
+  try {
+    execSync('which pdftotext', { timeout: 5000, stdio: 'ignore' });
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+var PDFTOTEXT_AVAILABLE = hasPdftotext();
+
 function extractWithPdftotext(pdfBuffer) {
+  if (!PDFTOTEXT_AVAILABLE) return null;
   var tmpPdf = path.join(os.tmpdir(), 'davofrio_' + Date.now() + '.pdf');
   var tmpTxt = tmpPdf.replace('.pdf', '.txt');
   try {
     fs.writeFileSync(tmpPdf, pdfBuffer);
-    // -layout preserves table structure, -enc UTF-8 for proper encoding
     execSync('pdftotext -layout -enc UTF-8 "' + tmpPdf + '" "' + tmpTxt + '"', { timeout: 30000 });
     var text = fs.readFileSync(tmpTxt, 'utf8');
     return { text: text, method: 'pdftotext' };
@@ -138,32 +149,27 @@ async function extractWithPdfParse(pdfBuffer) {
   }
 }
 
-// Quality check: detect corrupted/unreadable text
 function isReadable(text) {
   if (!text || text.length < 100) return false;
-  // Check ratio of readable characters
   var readable = (text.match(/[a-zA-Z0-9áéíóúñüÁÉÍÓÚÑÜ\s.,;:()?!%°\-+\/=]/g) || []).length;
   var ratio = readable / text.length;
-  return ratio > 0.5; // at least 50% readable chars
+  return ratio > 0.5;
 }
 
 async function parsePDF(buffer, fileName) {
-  // Try pdftotext first
+  // Try pdftotext if available (local Mac)
   var result = extractWithPdftotext(buffer);
   if (result && isReadable(result.text)) {
     console.log('    [pdftotext] ' + Math.round(result.text.length/1000) + 'k chars');
     return result;
   }
-
-  // Fallback to pdf-parse
+  // Use pdf-parse (works everywhere including Render)
   result = await extractWithPdfParse(buffer);
   if (result && isReadable(result.text)) {
     console.log('    [pdf-parse] ' + Math.round(result.text.length/1000) + 'k chars');
     return result;
   }
-
-  // Both failed — return whatever we got with a warning
-  console.log('    [WARN] texto de baja calidad en ' + fileName);
+  console.log('    [WARN] texto de baja calidad: ' + fileName);
   return result || { text: '', method: 'failed' };
 }
 
