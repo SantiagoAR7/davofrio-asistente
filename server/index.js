@@ -456,11 +456,17 @@ function buildSystemPrompt(brand, content, pastSolutions) {
 // ── START ─────────────────────────────────────────────────────────────────────
 async function start() {
   var db = load();
+  // Always ensure admin exists with correct password from env or default
+  var adminPass = process.env.ADMIN_PASSWORD || 'admin123';
+  var techPass = process.env.TECH_PASSWORD || 'davofrio123';
   if (db.users.length === 0) {
-    var hash = await bcrypt.hash('admin123', 10);
+    var hash = await bcrypt.hash(adminPass, 10);
+    var hash2 = await bcrypt.hash(techPass, 10);
     db.users.push({ id: 1, username: 'admin', password: hash, name: 'Administrador', role: 'admin', active: true, createdAt: new Date().toISOString() });
+    db.users.push({ id: 2, username: 'tecnico1', password: hash2, name: 'Tecnico Demo', role: 'tecnico', active: true, createdAt: new Date().toISOString() });
+    if (!db.history) db.history = [];
     save(db);
-    console.log('Admin creado: admin / admin123');
+    console.log('Usuarios creados: admin / ' + adminPass + ' | tecnico1 / ' + techPass);
   }
 
   var idx = loadIndex();

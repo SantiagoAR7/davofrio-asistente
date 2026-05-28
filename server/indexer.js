@@ -63,8 +63,19 @@ function saveIndex(idx) {
 
 // ── GOOGLE AUTH ───────────────────────────────────────────────────────────────
 function getAuth() {
-  if (!fs.existsSync(TOKEN_PATH)) throw new Error('No hay token de Drive.');
-  var token = JSON.parse(fs.readFileSync(TOKEN_PATH));
+  var token;
+  // Try env variable first (for production/Render)
+  if (process.env.DRIVE_TOKEN) {
+    try {
+      token = JSON.parse(process.env.DRIVE_TOKEN);
+    } catch(e) {
+      throw new Error('DRIVE_TOKEN env variable tiene JSON invalido');
+    }
+  } else if (fs.existsSync(TOKEN_PATH)) {
+    token = JSON.parse(fs.readFileSync(TOKEN_PATH));
+  } else {
+    throw new Error('No hay token de Drive. Configura DRIVE_TOKEN en las variables de entorno.');
+  }
   var auth = new google.auth.OAuth2(
     '363962271835-8tgevb8mlab5st0qm4hdu3kmcgljopkq.apps.googleusercontent.com',
     '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',
