@@ -1,0 +1,5 @@
+node_modules/
+data/drive_token.json
+data/db.json
+data/manual_index.json
+.env

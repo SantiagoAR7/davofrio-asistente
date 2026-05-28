@@ -1,0 +1,26 @@
+{
+  "solutions": [
+    {
+      "id": 1779877344898,
+      "code": "CH01",
+      "brand": "LG",
+      "problem": "Pruebas de funcionamiento",
+      "solution": "pruebas qa",
+      "techName": "Administrador",
+      "techId": 1,
+      "ts": "2026-05-27T10:22:24.898Z",
+      "helpful": 0
+    },
+    {
+      "id": 1779894527765,
+      "code": "CH25",
+      "brand": "LG",
+      "problem": "prueba tecnico1",
+      "solution": "prueba qa1",
+      "techName": "Técnico Demo",
+      "techId": 2,
+      "ts": "2026-05-27T15:08:47.766Z",
+      "helpful": 0
+    }
+  ]
+}

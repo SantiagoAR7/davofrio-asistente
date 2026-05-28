@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAVOFRIO — Asistente Técnico</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;--border:#2e3350;--border2:#3d4466;--text:#e8eaf6;--text2:#9098c0;--text3:#5a6080;--green:#1a9e6e;--green2:#0d6e4c;--red:#e04444;--orange:#f0a020;--blue:#4a7ff7;--r:8px;--font:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+button,input,textarea,select{font-family:var(--font)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* LOGIN */
+#ls{display:flex;align-items:center;justify-content:center;height:100vh}
+.lbox{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:360px}
+.llogo{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center}
+.llogo-ic{width:44px;height:44px;background:var(--green2);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.llogo-ic i{color:#fff;font-size:22px}
+.ltitle{font-size:20px;font-weight:600}
+.lsub{font-size:12px;color:var(--text2);margin-top:2px}
+.fg{margin-bottom:16px}
+.fl{font-size:12px;color:var(--text2);margin-bottom:6px;display:block;font-weight:500}
+.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;font-size:14px;color:var(--text);outline:none;transition:border-color .15s}
+.fi:focus{border-color:var(--green)}
+.btn{padding:10px 18px;border-radius:var(--r);border:none;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--green);color:#fff;width:100%;justify-content:center}
+.btn-p:hover{background:var(--green2)}
+.btn-g{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-g:hover{background:var(--bg3);color:var(--text)}
+.btn-d{background:#3a1010;color:#f08080;border:1px solid #7a2020}
+.btn-d:hover{background:#5a1515}
+.btn-sm{padding:5px 10px;font-size:11px}
+.lerr{background:#3a1010;border:1px solid #7a2020;border-radius:var(--r);padding:10px 13px;font-size:12px;color:#f08080;margin-bottom:14px;display:none}
+
+/* APP */
+#app{display:none;height:100vh;flex-direction:column}
+#app.v{display:flex}
+
+/* NAV */
+.nav{height:48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0}
+.nav-logo{display:flex;align-items:center;gap:8px}
+.nav-logo-ic{width:26px;height:26px;background:var(--green2);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.nav-logo-ic i{color:#fff;font-size:13px}
+.nav-logo-n{font-size:13px;font-weight:600}
+.nav-logo-s{font-size:10px;color:var(--text3)}
+.sp{flex:1}
+.ntab{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;border:none;background:transparent;color:var(--text2);cursor:pointer;transition:all .15s}
+.ntab:hover,.ntab.on{background:var(--bg3);color:var(--text)}
+.nbadge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500}
+.ba{background:#2a1a4a;color:#a080f0;border:1px solid #4a3080}
+.bt{background:#0d2a1a;color:var(--green);border:1px solid var(--green2)}
+
+/* MAIN LAYOUT */
+.body{flex:1;display:flex;overflow:hidden}
+
+/* LEFT SIDEBAR */
+.sb{width:190px;min-width:190px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .2s}
+.sb.collapsed{width:0;min-width:0}
+.sb-sec{padding:8px 12px 4px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;flex-shrink:0;white-space:nowrap}
+.sb-brands{flex:1;overflow-y:auto;padding:0 5px 5px}
+.bb{width:100%;display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;border:none;background:transparent;cursor:pointer;font-size:11px;color:var(--text2);text-align:left;transition:all .12s;white-space:nowrap;overflow:hidden}
+.bb:hover{background:var(--bg3);color:var(--text)}
+.bb.on{background:var(--bg3);color:#85c8a8;font-weight:500;border:1px solid var(--border2)}
+.bdt{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.bct{margin-left:auto;font-size:9px;color:var(--green);flex-shrink:0}
+.sb-foot{padding:8px 10px;border-top:1px solid var(--border);flex-shrink:0}
+.sf-row{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3);margin-bottom:2px;white-space:nowrap}
+.pulse{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* CHAT CENTER */
+.chat-wrap{flex:1;display:flex;flex-direction:column;min-width:0}
+.chat-top{padding:8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:42px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.chip-ok{background:#0d2a1a;color:var(--green);border:1px solid var(--green2)}
+.chip-load{background:#2a1a05;color:var(--orange);border:1px solid var(--orange)}
+.chip-n{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.chip i{font-size:11px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1s linear infinite}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.msg{display:flex;gap:8px}
+.msg.u{flex-direction:row-reverse}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.av.ai{background:#0d2a1a;color:var(--green);border:1px solid var(--green2)}
+.av.hu{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.bbl{padding:8px 13px;border-radius:11px;font-size:12.5px;line-height:1.6;max-width:calc(100% - 74px)}
+.msg.ai .bbl{background:var(--bg2);border:1px solid var(--border);border-top-left-radius:3px}
+.msg.u .bbl{background:var(--green2);color:#fff;border-top-right-radius:3px;border:1px solid var(--green)}
+.bbl b,.bbl strong{font-weight:500;color:#a8e6cc}
+.msg.u .bbl b,.msg.u .bbl strong{color:#d0ffe8}
+
+/* RESULT CARD */
+.rc{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:6px}
+.rc-h{padding:7px 12px;background:var(--bg3);display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.etag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:#3a1010;color:#f08080;border-radius:5px;font-size:11px;font-weight:600;border:1px solid #7a2020;letter-spacing:.03em}
+.edesc{font-size:12px;font-weight:500;color:var(--text)}
+.msrc{display:inline-flex;align-items:center;gap:3px;margin-left:auto;padding:2px 7px;background:var(--bg3);color:var(--text3);border-radius:4px;font-size:10px;border:1px solid var(--border)}
+.rc-b{padding:10px 12px;display:flex;flex-direction:column;gap:7px}
+.slbl{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.causes{display:flex;flex-wrap:wrap;gap:3px}
+.cause{padding:2px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;font-size:11px;color:var(--text2)}
+.cause.warn{background:#2a1a05;border-color:var(--orange);color:#f0c060}
+.steps{display:flex;flex-direction:column;gap:3px}
+.step{display:flex;gap:7px;align-items:flex-start;padding:6px 9px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)}
+.sn{width:18px;height:18px;border-radius:50%;background:var(--green2);color:#fff;font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.st{font-size:12px;line-height:1.55;flex:1;color:var(--text)}
+.st code{font-size:11px;background:#0a1a10;padding:1px 5px;border-radius:3px;color:#80d0a0;border:1px solid var(--green2)}
+
+/* INTERACTIVE CONDITIONS */
+.cond-card{border:1px solid #4a3808;border-radius:7px;overflow:hidden;margin:2px 0}
+.cond-q{padding:7px 10px;background:#1a1205;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;color:#d0a050}
+.cond-q i{font-size:14px;color:var(--orange)}
+.cond-btns{display:flex;gap:6px;padding:7px 10px;background:#120d03;border-top:1px solid #4a3808}
+.cond-btn{padding:5px 16px;border-radius:5px;border:none;font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.cond-btn.yes{background:#0d2a1a;color:var(--green);border:1px solid var(--green2)}
+.cond-btn.yes:hover{background:#1a4a2a}
+.cond-btn.no{background:#2a1010;color:#f08080;border:1px solid #7a2020}
+.cond-btn.no:hover{background:#3a1515}
+.cond-btn.selected{opacity:1;cursor:default}
+.cond-btn:not(.selected){opacity:.85}
+.cond-btn i{font-size:12px}
+
+/* TABLES */
+.vtable{width:100%;border-collapse:collapse;font-size:11px}
+.vtable th{padding:5px 9px;background:var(--bg3);font-weight:600;text-align:left;border:1px solid var(--border);font-size:10px;color:var(--text2)}
+.vtable td{padding:4px 9px;border:1px solid var(--border);color:var(--text)}
+.vtable tr:nth-child(even) td{background:var(--bg3)}
+.srctag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--bg3);color:var(--text3);border-radius:4px;font-size:10px;border:1px solid var(--border)}
+
+/* RESOLVE BUTTON */
+.resolve-btn{margin-top:6px;padding:7px 16px;background:#0d2a1a;color:var(--green);border:1px solid var(--green2);border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.resolve-btn:hover{background:#1a4a2a}
+
+/* BRAND PICKER */
+.picker{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:6px}
+.picker-title{font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;line-height:1.4}
+.picker-grid{display:flex;flex-wrap:wrap;gap:5px}
+.pick-btn{padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:11.5px;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px;font-weight:500}
+.pick-btn:hover{border-color:var(--green);color:var(--green);background:#0d2a1a}
+.pick-dot{width:5px;height:5px;border-radius:50%}
+.pick-sub{font-size:10px;color:var(--text3);margin-top:1px}
+
+/* TYPING */
+.typing{display:flex;gap:3px;align-items:center;padding:2px 0}
+.tdot{width:4px;height:4px;border-radius:50%;background:var(--text3);animation:tb 1.2s infinite}
+.tdot:nth-child(2){animation-delay:.2s}.tdot:nth-child(3){animation-delay:.4s}
+@keyframes tb{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+
+/* INPUT */
+.inp{padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0}
+.irow{display:flex;gap:8px;align-items:flex-end}
+.iwrap{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 13px;display:flex;align-items:center;gap:8px;transition:border-color .15s}
+.iwrap:focus-within{border-color:var(--green)}
+.iwrap textarea{flex:1;border:none;background:transparent;resize:none;font-size:13px;color:var(--text);outline:none;line-height:1.5;max-height:80px}
+.iwrap textarea::placeholder{color:var(--text3)}
+.sbtn{width:36px;height:36px;border-radius:8px;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.sbtn:hover{background:var(--green2)}.sbtn:disabled{background:var(--bg3);cursor:not-allowed}
+.sbtn i{color:#fff;font-size:16px}
+.ihint{font-size:10px;color:var(--text3);margin-top:5px;text-align:center}
+
+/* RIGHT RESOURCES PANEL */
+.rpanel{width:260px;min-width:260px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .2s}
+.rpanel.collapsed{width:0;min-width:0}
+.rp-head{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.rp-title{font-size:12px;font-weight:500;flex:1}
+.rp-body{flex:1;overflow-y:auto;padding:10px}
+.rp-empty{text-align:center;padding:24px 12px;color:var(--text3);font-size:12px}
+.rp-empty i{font-size:24px;display:block;margin-bottom:8px}
+.res-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.res-card:hover{border-color:var(--green)}
+.res-thumb{width:100%;aspect-ratio:16/9;background:#0a0a14;display:flex;align-items:center;justify-content:center;position:relative}
+.res-thumb i{font-size:28px;color:var(--text3)}
+.res-thumb img{width:100%;height:100%;object-fit:cover}
+.res-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.res-play-ic{width:40px;height:40px;background:rgba(0,0,0,.6);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.res-play-ic i{color:#fff;font-size:18px}
+.res-info{padding:8px 10px}
+.res-title{font-size:11.5px;font-weight:500;color:var(--text);line-height:1.4}
+.res-meta{font-size:10px;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:4px}
+
+/* RESOLVE MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;width:460px;max-width:95vw}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--text2);margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+/* ADMIN */
+#admin-view{display:none;flex:1;overflow:hidden}
+#admin-view.v{display:flex}
+.adm-layout{display:flex;flex:1;overflow:hidden}
+.adm-sb{width:180px;background:var(--bg2);border-right:1px solid var(--border);padding:10px 6px;flex-shrink:0}
+.anav{width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-size:12px;text-align:left;transition:all .12s;margin-bottom:2px}
+.anav:hover,.anav.on{background:var(--bg3);color:var(--text)}
+.anav i{font-size:14px}
+.adm-main{flex:1;overflow-y:auto;padding:20px}
+.adm-title{font-size:18px;font-weight:600;margin-bottom:4px}
+.adm-sub{font-size:12px;color:var(--text2);margin-bottom:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px}
+.stat-val{font-size:28px;font-weight:700;color:var(--green)}
+.stat-lbl{font-size:11px;color:var(--text2);margin-top:2px}
+.tw{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.tw-head{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.tw-title{font-size:13px;font-weight:500}
+table.dt{width:100%;border-collapse:collapse;font-size:12px}
+table.dt th{padding:7px 12px;background:var(--bg3);text-align:left;font-weight:500;color:var(--text2);font-size:11px;border-bottom:1px solid var(--border)}
+table.dt td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+table.dt tr:last-child td{border-bottom:none}
+table.dt tr:hover td{background:var(--bg3)}
+.tdq{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.fi-sm{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:5px 9px;font-size:12px;color:var(--text);outline:none}
+.fi-sm:focus{border-color:var(--green)}
+.rbadge{padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
+.idx-brand{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.idx-brand:last-child{border-bottom:none}
+.idx-count{margin-left:auto;color:var(--green);font-weight:500;font-size:11px}
+
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="ls">
+  <div class="lbox">
+    <div class="llogo">
+      <div class="llogo-ic"><i class="ti ti-snowflake"></i></div>
+      <div><div class="ltitle">DAVOFRIO</div><div class="lsub">Asistente Técnico IA</div></div>
+    </div>
+    <div class="lerr" id="lerr"></div>
+    <div class="fg"><label class="fl">Usuario</label><input class="fi" id="lu" placeholder="usuario" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="fg"><label class="fl">Contraseña</label><input class="fi" id="lp" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-p" onclick="doLogin()"><i class="ti ti-login"></i> Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="nav">
+    <div class="nav-logo"><div class="nav-logo-ic"><i class="ti ti-snowflake"></i></div><div class="nav-logo-n">DAVOFRIO</div><div class="nav-logo-s">Asistente Técnico</div></div>
+    <div class="sp"></div>
+    <button class="ntab on" id="tab-chat" onclick="showTab('chat')"><i class="ti ti-message-circle" style="font-size:13px"></i> Diagnóstico</button>
+    <button class="ntab hidden" id="tab-admin" onclick="showTab('admin')"><i class="ti ti-shield" style="font-size:13px"></i> Administración</button>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:4px">
+      <span style="font-size:12px;color:var(--text2)" id="nav-name"></span>
+      <span class="nbadge" id="nav-rbadge"></span>
+      <button class="btn btn-g btn-sm" onclick="doLogout()"><i class="ti ti-logout"></i></button>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- CHAT VIEW -->
+    <div id="chat-view" style="display:flex;flex:1;overflow:hidden">
+      <!-- LEFT: brands -->
+      <div class="sb" id="sb">
+        <div class="sb-sec">Marcas</div>
+        <div class="sb-brands" id="brand-list"></div>
+        <div class="sb-foot">
+          <div class="sf-row"><div class="pulse"></div>Drive conectado</div>
+          <div class="sf-row"><i class="ti ti-brand-openai" style="font-size:11px"></i> GPT-4o activo</div>
+          <div class="sf-row" id="idx-status" style="cursor:pointer" onclick="showTab('admin')"></div>
+        </div>
+      </div>
+
+      <!-- CENTER: chat -->
+      <div class="chat-wrap">
+        <div class="chat-top" id="chat-top">
+          <div class="chip chip-n"><i class="ti ti-bolt"></i> Detección automática</div>
+          <div class="chip chip-n hidden" id="chip-brand"><i class="ti ti-book-2"></i><span id="chip-brand-n"></span></div>
+          <div class="chip chip-load hidden" id="chip-load"><i class="ti ti-loader spin"></i><span id="chip-load-n">Buscando…</span></div>
+          <div class="chip chip-ok hidden" id="chip-ok"><i class="ti ti-check"></i><span id="chip-ok-n"></span></div>
+          <button class="btn btn-g btn-sm" style="margin-left:auto" onclick="newChat()"><i class="ti ti-plus"></i> Nueva consulta</button>
+        </div>
+
+        <div class="chat-msgs" id="msgs">
+          <div class="msg ai">
+            <div class="av ai"><i class="ti ti-snowflake" style="font-size:12px"></i></div>
+            <div class="bbl">Hola. Soy el asistente técnico de <b>DAVOFRIO</b>.<br><br>Escribe el <b>código de error</b> directamente — detecto la marca y el manual automáticamente. Si el código aparece en varios manuales, te mostraré cuáles para que elijas.<br><br>Ejemplos: <b>E4</b> · <b>CH05</b> · <b>U4</b> · <b>compresor no arranca LG</b></div>
+          </div>
+        </div>
+
+        <div class="inp">
+          <div class="irow">
+            <div class="iwrap"><textarea id="q" rows="1" placeholder="Código de error o descripción de avería…" onkeydown="hk(event)" oninput="ar(this)"></textarea></div>
+            <button class="sbtn" id="sbtn" onclick="send()"><i class="ti ti-arrow-up"></i></button>
+          </div>
+          <div class="ihint" id="ihint">Escribe el código — busco en todos los manuales automáticamente</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: resources -->
+      <div class="rpanel" id="rpanel">
+        <div class="rp-head">
+          <i class="ti ti-video" style="font-size:14px;color:var(--text2)"></i>
+          <span class="rp-title">Recursos</span>
+          <button class="btn btn-g btn-sm" onclick="togglePanel()" style="padding:3px 6px"><i class="ti ti-chevron-right"></i></button>
+        </div>
+        <div class="rp-body" id="rp-body">
+          <div class="rp-empty"><i class="ti ti-video-off"></i>Los recursos aparecerán aquí cuando consultes un código de error</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div id="admin-view">
+      <div class="adm-layout">
+        <div class="adm-sb">
+          <button class="anav on" id="an-stats" onclick="aTab('stats')"><i class="ti ti-chart-bar"></i> Estadísticas</button>
+          <button class="anav" id="an-history" onclick="aTab('history')"><i class="ti ti-history"></i> Historial</button>
+          <button class="anav" id="an-users" onclick="aTab('users')"><i class="ti ti-users"></i> Técnicos</button>
+          <button class="anav" id="an-resources" onclick="aTab('resources')"><i class="ti ti-video"></i> Recursos</button>
+          <button class="anav" id="an-solutions" onclick="aTab('solutions')"><i class="ti ti-bulb"></i> Soluciones</button>
+          <button class="anav" id="an-index" onclick="aTab('index')"><i class="ti ti-database"></i> Índice</button>
+        </div>
+        <div class="adm-main" id="adm-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESOLVE MODAL -->
+<div class="modal-bg" id="modal-resolve">
+  <div class="modal">
+    <div class="modal-title">Avería resuelta</div>
+    <div class="modal-sub">Documenta cómo se solucionó para ayudar a otros técnicos en el futuro</div>
+    <div class="fg"><label class="fl">¿Cuál era exactamente el problema?</label><textarea class="fi" id="res-problem" rows="2" placeholder="Ej: Presostato de baja abierto por falta de gas…"></textarea></div>
+    <div class="fg"><label class="fl">¿Cómo se solucionó? (obligatorio)</label><textarea class="fi" id="res-solution" rows="3" placeholder="Ej: Se recargó el circuito con 1.2kg de R410A. Presión baja en aspiración era 2 bar. Se encontró fuga en unión del tubo de aspiración…"></textarea></div>
+    <div class="lerr" id="res-err"></div>
+    <div class="modal-actions">
+      <button class="btn btn-g" onclick="closeResolve()">Cancelar</button>
+      <button class="btn btn-p" onclick="submitResolve()"><i class="ti ti-check"></i> Guardar solución</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER MODAL -->
+<div class="modal-bg" id="modal-user">
+  <div class="modal">
+    <div class="modal-title" id="mu-title">Nuevo técnico</div>
+    <div class="fg"><label class="fl">Nombre</label><input class="fi" id="mu-name" placeholder="Juan García"></div>
+    <div class="fg"><label class="fl">Usuario</label><input class="fi" id="mu-user" placeholder="jgarcia"></div>
+    <div class="fg"><label class="fl">Contraseña</label><input class="fi" id="mu-pass" type="password" placeholder="mínimo 6 caracteres"></div>
+    <div class="fg"><label class="fl">Rol</label><select class="fi" id="mu-role"><option value="tecnico">Técnico</option><option value="admin">Administrador</option></select></div>
+    <div class="lerr" id="mu-err"></div>
+    <div class="modal-actions">
+      <button class="btn btn-g" onclick="closeMU()">Cancelar</button>
+      <button class="btn btn-p" onclick="saveUser()"><i class="ti ti-check"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESOURCE MODAL -->
+<div class="modal-bg" id="modal-res">
+  <div class="modal">
+    <div class="modal-title">Añadir recurso</div>
+    <div class="fg"><label class="fl">Título</label><input class="fi" id="mr-title" placeholder="Cómo diagnosticar el error E4 en Daikin"></div>
+    <div class="fg"><label class="fl">URL del vídeo (YouTube, Vimeo…)</label><input class="fi" id="mr-url" placeholder="https://youtube.com/watch?v=..."></div>
+    <div class="fg"><label class="fl">Código de error (opcional)</label><input class="fi" id="mr-code" placeholder="E4"></div>
+    <div class="fg"><label class="fl">Marca (opcional)</label><select class="fi" id="mr-brand"><option value="">Todas las marcas</option></select></div>
+    <div class="fg"><label class="fl">Tipo</label><select class="fi" id="mr-type"><option value="video">Vídeo</option><option value="pdf">Documento PDF</option><option value="image">Imagen/Esquema</option></select></div>
+    <div class="lerr" id="mr-err"></div>
+    <div class="modal-actions">
+      <button class="btn btn-g" onclick="closeMR()">Cancelar</button>
+      <button class="btn btn-p" onclick="saveResource()"><i class="ti ti-check"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API='';
+let me=null, brands=[], activeBrand=null, activeBrandId=null, hist=[], busy=false, panelOpen=true;
+let currentCode=null, currentSessionId=null;
+
+// ── LOGIN ───────────────────────────────────────────────────────────────────
+async function doLogin(){
+  const u=document.getElementById('lu').value.trim(), p=document.getElementById('lp').value;
+  const err=document.getElementById('lerr'); err.style.display='none';
+  try{const r=await api('POST','/api/login',{username:u,password:p}); me=r.user; initApp();}
+  catch(e){err.textContent=e.message;err.style.display='block';}
+}
+async function doLogout(){await api('POST','/api/logout');location.reload();}
+
+// ── INIT ────────────────────────────────────────────────────────────────────
+async function initApp(){
+  document.getElementById('ls').style.display='none';
+  document.getElementById('app').classList.add('v');
+  document.getElementById('nav-name').textContent=me.name;
+  const rb=document.getElementById('nav-rbadge');
+  rb.textContent=me.role==='admin'?'Admin':'Técnico';
+  rb.className='nbadge '+(me.role==='admin'?'ba':'bt');
+  if(me.role==='admin') document.getElementById('tab-admin').classList.remove('hidden');
+
+  // Load brands from index status
+  try{
+    const status=await api('GET','/api/index/status');
+    const total=status.total;
+    brands=status.brands;
+    renderBrands();
+    const idxEl=document.getElementById('idx-status');
+    if(total>0){
+      idxEl.innerHTML=`<i class="ti ti-database" style="font-size:11px"></i> ${total} manuales indexados`;
+    } else {
+      idxEl.innerHTML=`<i class="ti ti-alert-circle" style="font-size:11px;color:var(--orange)"></i> Sin índice`;
+    }
+  }catch(e){renderBrands();}
+
+  // Populate resource brand select
+  document.getElementById('mr-brand').innerHTML='<option value="">Todas las marcas</option>'+
+    ['DAIKIN','LG','HITACHI','MITSUBISHI ELECTRIC','MITSUBISHI DAYA','SAMSUNG','PANASONIC','BOSCH','HISENSE','HAIER','ATLANTIC','MUDOCLIMA','ECOFOREST','BLUEBOX','HTW','KAYSUN','DAITSU','MIDEA']
+    .map(b=>`<option value="${b}">${b}</option>`).join('');
+}
+
+function renderBrands(){
+  const colors={'DAIKIN':'#378ADD','LG':'#7F77DD','HITACHI':'#EF9F27','MITSUBISHI ELECTRIC':'#D4537E','MITSUBISHI DAYA':'#E24B4A','SAMSUNG':'#1D9E75','PANASONIC':'#0F6E56','BOSCH':'#BA7517','HISENSE':'#185FA5','HAIER':'#D85A30','ATLANTIC':'#639922','MUDOCLIMA':'#884FA2','ECOFOREST':'#3B6D11','BLUEBOX':'#185FA5','HTW':'#5F5E5A','KAYSUN':'#993C1D','DAITSU':'#533AB7','MIDEA':'#D4537E'};
+  const list=['DAIKIN','LG','HITACHI','MITSUBISHI ELECTRIC','MITSUBISHI DAYA','SAMSUNG','PANASONIC','BOSCH','HISENSE','HAIER','ATLANTIC','MUDOCLIMA','ECOFOREST','BLUEBOX','HTW','KAYSUN','DAITSU','MIDEA'];
+  const counts={};
+  (brands||[]).forEach(b=>counts[b.n]=b.count);
+  document.getElementById('brand-list').innerHTML=list.map(n=>`
+    <button class="bb" data-brand="${n}" onclick="filterBrand('${n}','${(brands.find(b=>b.n===n)||{}).id||''}')">
+      <div class="bdt" style="background:${colors[n]||'#888'}"></div>
+      <span>${n}</span>
+      ${counts[n]?`<span class="bct">✓</span>`:''}
+    </button>`).join('');
+}
+
+function filterBrand(name, brandId){
+  document.querySelectorAll('.bb').forEach(b=>b.classList.toggle('on',b.dataset.brand===name));
+  activeBrand=name; activeBrandId=brandId||null; hist=[];
+  document.getElementById('chip-brand-n').textContent=name;
+  document.getElementById('chip-brand').classList.remove('hidden');
+  document.querySelector('.chip.chip-n').classList.add('hidden');
+  addAI(`Filtro activo: <b>${name}</b>. Escribe el código de error y busco en los manuales de esta marca.`);
+}
+
+// ── CHAT ────────────────────────────────────────────────────────────────────
+function addAI(html){
+  const c=document.getElementById('msgs'), d=document.createElement('div');
+  d.className='msg ai';
+  d.innerHTML=`<div class="av ai"><i class="ti ti-snowflake" style="font-size:12px"></i></div><div class="bbl">${html}</div>`;
+  c.appendChild(d); c.scrollTop=c.scrollHeight; return d;
+}
+function addU(txt){
+  const c=document.getElementById('msgs'), d=document.createElement('div');
+  d.className='msg u';
+  d.innerHTML=`<div class="av hu"><i class="ti ti-user" style="font-size:12px"></i></div><div class="bbl">${txt}</div>`;
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+function addTyping(){
+  const c=document.getElementById('msgs'), d=document.createElement('div');
+  d.id='ty'; d.className='msg ai';
+  d.innerHTML=`<div class="av ai"><i class="ti ti-snowflake" style="font-size:12px"></i></div><div class="bbl"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+function rmTyping(){const t=document.getElementById('ty');if(t)t.remove();}
+function scrollChat(){const c=document.getElementById('msgs');c.scrollTop=c.scrollHeight;}
+
+function hk(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,80)+'px';}
+
+function newChat(){
+  hist=[]; activeBrandId=null; activeBrand=null; currentCode=null; currentSessionId=null;
+  document.querySelectorAll('.bb').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('chip-ok').classList.add('hidden');
+  document.getElementById('chip-load').classList.add('hidden');
+  document.getElementById('chip-brand').classList.add('hidden');
+  var auto = document.querySelector('.chip.chip-n');
+  if(auto) auto.classList.remove('hidden');
+  document.getElementById('msgs').innerHTML='<div class="msg ai"><div class="av ai"><i class="ti ti-snowflake" style="font-size:12px"></i></div><div class="bbl">Nueva consulta. Escribe el codigo de error — detecto la marca automaticamente.</div></div>';
+  setResourcesEmpty();
+  document.getElementById("q").focus();
+}
+
+function togglePanel(){
+  panelOpen=!panelOpen;
+  document.getElementById('rpanel').classList.toggle('collapsed',!panelOpen);
+}
+
+async function send(){
+  if(busy)return;
+  const q=document.getElementById('q').value.trim();
+  if(!q)return;
+  addU(q); document.getElementById('q').value=''; document.getElementById('q').style.height='auto';
+  busy=true; document.getElementById('sbtn').disabled=true; addTyping();
+
+  // If no brand selected, search first
+  if(!activeBrandId){
+    document.getElementById('chip-load').classList.remove('hidden');
+    document.getElementById('chip-load-n').textContent='Buscando en manuales…';
+    try{
+      const sr=await api('POST','/api/search',{query:(activeBrand?activeBrand+' ':'')+q});
+      if(sr.total===0){
+        rmTyping();
+        addAI(`No encontré el código <b>${q}</b> en ningún manual indexado. Verificá el código o usa el filtro de marca del panel izquierdo.<br><br>Si no hay manuales indexados todavía, ve a <b>Administración → Índice → Reconstruir</b>.`);
+        busy=false; document.getElementById('sbtn').disabled=false;
+        document.getElementById('chip-load').classList.add('hidden');
+        return;
+      }
+      if(sr.multiMatch && !activeBrand){
+        // Multiple brands — show picker
+        rmTyping();
+        const pickerHtml=`<div class="picker"><div class="picker-title"><i class="ti ti-copy" style="font-size:13px"></i> Código encontrado en <b>${sr.results.length} marcas</b>  — ¿cuál es tu equipo?</div><div class="picker-grid">${sr.results.map(br=>`<button class="pick-btn" onclick="selectBrand('${br[0].brandId}','${br[0].brand}','${br[0].brandColor||"#888"}')"><div class="pick-dot" style="background:${br[0].brandColor||'#888'}"></div><span>${br[0].brand}</span></button>`).join('')}</div></div>`;
+        addAI(pickerHtml);
+        hist.push({role:'user',content:q});
+        busy=false; document.getElementById('sbtn').disabled=false;
+        document.getElementById('chip-load').classList.add('hidden');
+        return;
+      }
+      // Single brand — auto select, no picker shown
+      const topResult=sr.results[0][0];
+      activeBrand=sr.singleBrand||topResult.brand;
+      activeBrandId=sr.singleBrandId||topResult.brandId;
+      document.getElementById('chip-ok-n').textContent=activeBrand;
+      document.getElementById('chip-ok').classList.remove('hidden');
+      document.getElementById('chip-load').classList.add('hidden');
+    }catch(e){
+      rmTyping();
+      addAI(`Error buscando en manuales: ${e.message}`);
+      busy=false; document.getElementById('sbtn').disabled=false;
+      document.getElementById('chip-load').classList.add('hidden');
+      return;
+    }
+  }
+
+  await doQuery(q);
+}
+
+async function selectBrand(brandId, brand, color){
+  activeBrand=brand; activeBrandId=brandId;
+  document.querySelectorAll('.bb').forEach(b=>b.classList.toggle('on',b.dataset.brand===brand));
+  document.getElementById('chip-brand-n').textContent=brand;
+  document.getElementById('chip-brand').classList.remove('hidden');
+  document.getElementById('chip-ok-n').textContent=brand;
+  document.getElementById('chip-ok').classList.remove('hidden');
+  document.getElementById('chip-load').classList.add('hidden');
+  // Re-send last user message automatically
+  const lastUser=hist.filter(h=>h.role==='user').pop()?.content||'';
+  if(lastUser){busy=true;document.getElementById('sbtn').disabled=true;addTyping();await doQuery(lastUser);}
+}
+
+// Called when user clicks a cond-btn (yes/no)
+function condAnswer(btn, answer){
+  // Disable both buttons in this card
+  const card=btn.closest('.cond-card');
+  card.querySelectorAll('.cond-btn').forEach(b=>{b.disabled=true;b.classList.remove('selected');});
+  btn.classList.add('selected');
+  const question=card.querySelector('.cond-q').textContent.trim();
+  const response=answer==='si'?'✓ Sí':'✗ No';
+  // Send as a user message continuing the diagnosis
+  document.getElementById('q').value='';
+  busy=true; document.getElementById('sbtn').disabled=true; addTyping();
+  const msg=`${question} → Respuesta: ${response}`;
+  hist.push({role:'user',content:msg});
+  doQuery(msg);
+}
+
+async function doQuery(q){
+  if(!currentSessionId) currentSessionId=Date.now().toString();
+  hist.push({role:'user',content:q});
+  try{
+    const r=await api('POST','/api/query',{query:q, brandId:activeBrandId, history:hist.slice(-12), sessionId:currentSessionId});
+    hist.push({role:'assistant',content:r.answer});
+    // Extract code for resources
+    if(r.errorCode) loadResources(r.errorCode, r.brand);
+    rmTyping();
+    addAI(r.answer);
+    scrollChat();
+  }catch(e){
+    rmTyping();
+    addAI(`<span style="color:#f08080"><i class="ti ti-alert-circle"></i> Error: ${e.message}</span>`);
+  }
+  busy=false; document.getElementById('sbtn').disabled=false;
+}
+
+// ── RESOURCES PANEL ──────────────────────────────────────────────────────────
+async function loadResources(code, brand){
+  try{
+    const res=await api('GET',`/api/resources?code=${code}&brand=${brand||''}`);
+    const body=document.getElementById('rp-body');
+    if(!res.length){setResourcesEmpty(code);return;}
+    body.innerHTML=`<div style="font-size:10px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Recursos para ${code}${brand?' — '+brand:''}</div>`+
+      res.map(r=>renderResource(r)).join('');
+  }catch(e){}
+}
+
+function setResourcesEmpty(code){
+  document.getElementById('rp-body').innerHTML=`<div class="rp-empty"><i class="ti ti-video-off"></i>${code?`Sin recursos para ${code}`:'Los recursos aparecerán aquí al consultar un código'}</div>`;
+}
+
+function renderResource(r){
+  const isYT=r.url&&(r.url.includes('youtube.com')||r.url.includes('youtu.be'));
+  const ytId=isYT?(r.url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)||[])[1]:null;
+  const thumb=ytId?`<img src="https://img.youtube.com/vi/${ytId}/mqdefault.jpg" alt="${r.title}"><div class="res-play"><div class="res-play-ic"><i class="ti ti-player-play"></i></div></div>`:`<i class="ti ti-${r.type==='pdf'?'file-text':'video'}"></i>`;
+  return `<div class="res-card" onclick="openResource('${r.url}')">
+    <div class="res-thumb">${thumb}</div>
+    <div class="res-info">
+      <div class="res-title">${r.title}</div>
+      <div class="res-meta"><i class="ti ti-${r.type==='pdf'?'file-text':'brand-youtube'}" style="font-size:11px"></i>${r.brand||'General'}</div>
+    </div>
+  </div>`;
+}
+
+function openResource(url){window.open(url,'_blank');}
+
+// ── RESOLVE MODAL ────────────────────────────────────────────────────────────
+function markResolved(){
+  document.getElementById('res-problem').value='';
+  document.getElementById('res-solution').value='';
+  document.getElementById('res-err').style.display='none';
+  document.getElementById('modal-resolve').classList.add('open');
+}
+function closeResolve(){document.getElementById('modal-resolve').classList.remove('open');}
+async function submitResolve(){
+  const problem=document.getElementById('res-problem').value.trim();
+  const solution=document.getElementById('res-solution').value.trim();
+  const err=document.getElementById('res-err'); err.style.display='none';
+  if(!solution){err.textContent='La solución es obligatoria';err.style.display='block';return;}
+  // Extract code from last user message in history
+  const lastQ=hist.filter(function(h){return h.role==='user';}).pop();
+  const lastContent=lastQ?lastQ.content:'';
+  const codeMatch=lastContent.match(/\b([A-Za-z]{0,3}\d{1,3})\b/);
+  const code=codeMatch?codeMatch[1].toUpperCase():'desconocido';
+  try{
+    await api('POST','/api/solutions',{
+      code:code,
+      brand:activeBrand||null,
+      brandId:activeBrandId||null,
+      problem:problem,
+      solution:solution
+    });
+    closeResolve();
+    addAI('<b>Solucion guardada.</b> Gracias '+me.name+' — ayudara a otros tecnicos con el mismo codigo en el futuro.');
+  }catch(e){err.textContent=e.message;err.style.display='block';}
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function showTab(t){
+  document.getElementById('tab-chat').classList.toggle('on',t==='chat');
+  document.getElementById('tab-admin').classList.toggle('on',t==='admin');
+  document.getElementById('chat-view').style.display=t==='chat'?'flex':'none';
+  const av=document.getElementById('admin-view');
+  av.classList.toggle('v',t==='admin');
+  if(t==='admin')aTab('stats');
+}
+
+// ── ADMIN TABS ────────────────────────────────────────────────────────────────
+async function aTab(t){
+  ['stats','history','users','resources','solutions','index'].forEach(x=>{
+    document.getElementById(`an-${x}`).classList.toggle('on',x===t);
+  });
+  const el=document.getElementById('adm-content');
+  if(t==='stats') await renderStats(el);
+  else if(t==='history') await renderHistory(el);
+  else if(t==='users') await renderUsers(el);
+  else if(t==='resources') await renderResources(el);
+  else if(t==='solutions') await renderSolutions(el);
+  else if(t==='index') await renderIndex(el);
+}
+
+async function renderStats(el){
+  const s=await api('GET','/api/admin/stats');
+  el.innerHTML=`<div class="adm-title">Estadísticas</div><div class="adm-sub">Actividad del sistema</div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-val">${s.totalQueries}</div><div class="stat-lbl">Consultas totales</div></div>
+    <div class="stat-card"><div class="stat-val">${s.last7days}</div><div class="stat-lbl">Últimos 7 días</div></div>
+    <div class="stat-card"><div class="stat-val">${s.totalUsers}</div><div class="stat-lbl">Usuarios</div></div>
+    <div class="stat-card"><div class="stat-val">${s.topCodes.length}</div><div class="stat-lbl">Códigos distintos</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="tw"><div class="tw-head"><div class="tw-title">Códigos más consultados</div></div>
+      <table class="dt"><thead><tr><th>Código</th><th>Consultas</th></tr></thead><tbody>
+        ${s.topCodes.map(([c,n])=>`<tr><td><b>${c}</b></td><td>${n}</td></tr>`).join('')||'<tr><td colspan="2" style="color:var(--text3)">Sin datos aún</td></tr>'}
+      </tbody></table>
+    </div>
+    <div class="tw"><div class="tw-head"><div class="tw-title">Por técnico</div></div>
+      <table class="dt"><thead><tr><th>Técnico</th><th>Consultas</th></tr></thead><tbody>
+        ${Object.entries(s.byUser).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([u,n])=>`<tr><td>${u}</td><td><b>${n}</b></td></tr>`).join('')||'<tr><td colspan="2" style="color:var(--text3)">Sin datos aún</td></tr>'}
+      </tbody></table>
+    </div>
+  </div>`;
+}
+
+async function renderHistory(el){
+  el.innerHTML=`<div class="adm-title">Historial de consultas</div><div class="adm-sub">Todas las consultas de los técnicos</div>
+  <div class="filters">
+    <input class="fi-sm" id="fh-user" placeholder="Técnico" oninput="filterH()">
+    <input class="fi-sm" id="fh-brand" placeholder="Marca" oninput="filterH()">
+    <input class="fi-sm" id="fh-code" placeholder="Código" oninput="filterH()">
+    <input class="fi-sm" id="fh-from" type="date" oninput="filterH()">
+    <input class="fi-sm" id="fh-to" type="date" oninput="filterH()">
+  </div>
+  <div class="tw"><table class="dt"><thead><tr><th>Fecha</th><th>Técnico</th><th>Marca</th><th>Código</th><th>Consulta</th></tr></thead><tbody id="htbody"></tbody></table></div>`;
+  await filterH();
+}
+
+async function filterH(){
+  const u=document.getElementById('fh-user')?.value||'',br=document.getElementById('fh-brand')?.value||'',
+    co=document.getElementById('fh-code')?.value||'',fr=document.getElementById('fh-from')?.value||'',to=document.getElementById('fh-to')?.value||'';
+  const p=new URLSearchParams({type:'query'});
+  if(u)p.set('userId',u);if(br)p.set('brand',br);if(co)p.set('code',co);if(fr)p.set('from',fr);if(to)p.set('to',to);
+  const hist=await api('GET',`/api/admin/history?${p}`);
+  const tb=document.getElementById('htbody');
+  if(!tb)return;
+  tb.innerHTML=hist.map(h=>`<tr>
+    <td style="white-space:nowrap;font-size:11px;color:var(--text2)">${new Date(h.ts).toLocaleString('es-ES')}</td>
+    <td><b>${h.name||h.username}</b></td><td>${h.brand||'—'}</td>
+    <td>${h.errorCode?`<span style="color:var(--orange);font-weight:500">${h.errorCode}</span>`:'—'}</td>
+    <td class="tdq" title="${(h.query||'').replace(/"/g,'&quot;')}">${h.query||''}</td>
+  </tr>`).join('')||'<tr><td colspan="5" style="color:var(--text3);text-align:center;padding:20px">Sin consultas aún</td></tr>';
+}
+
+async function renderUsers(el){
+  const users=await api('GET','/api/admin/users');
+  el.innerHTML=`<div class="adm-title">Gestión de técnicos</div><div class="adm-sub">Usuarios del sistema</div>
+  <button class="btn btn-p" style="margin-bottom:16px;width:auto" onclick="openMU()"><i class="ti ti-plus"></i> Nuevo técnico</button>
+  <div class="tw"><table class="dt"><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th>Creado</th><th></th></tr></thead><tbody>
+    ${users.map(u=>`<tr>
+      <td><b>${u.name}</b></td><td style="color:var(--text2)">${u.username}</td>
+      <td><span class="rbadge ${u.role==='admin'?'ba':'bt'}">${u.role}</span></td>
+      <td style="color:${u.active?'var(--green)':'var(--text3)'}">${u.active?'Activo':'Inactivo'}</td>
+      <td style="color:var(--text3);font-size:11px">${new Date(u.createdAt).toLocaleDateString('es-ES')}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-g btn-sm" onclick="toggleU(${u.id},${!u.active})">${u.active?'Desactivar':'Activar'}</button>
+        ${u.role!=='admin'?`<button class="btn btn-d btn-sm" onclick="deleteU(${u.id})"><i class="ti ti-trash"></i></button>`:''}
+      </td>
+    </tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+async function renderResources(el){
+  const res=await api('GET','/api/admin/resources');
+  el.innerHTML=`<div class="adm-title">Recursos y vídeos</div><div class="adm-sub">Vídeos de técnicos asociados a códigos de error</div>
+  <button class="btn btn-p" style="margin-bottom:16px;width:auto" onclick="openMR()"><i class="ti ti-plus"></i> Añadir recurso</button>
+  <div class="tw"><table class="dt"><thead><tr><th>Título</th><th>Código</th><th>Marca</th><th>Tipo</th><th>Subido por</th><th></th></tr></thead><tbody>
+    ${res.map(r=>`<tr>
+      <td><a href="${r.url}" target="_blank" style="color:var(--green)">${r.title}</a></td>
+      <td>${r.code?`<b>${r.code}</b>`:'Todos'}</td>
+      <td>${r.brand||'General'}</td>
+      <td>${r.type}</td>
+      <td style="color:var(--text2)">${r.uploadedBy}</td>
+      <td><button class="btn btn-d btn-sm" onclick="deleteRes(${r.id})"><i class="ti ti-trash"></i></button></td>
+    </tr>`).join('')||'<tr><td colspan="6" style="color:var(--text3);text-align:center;padding:20px">Sin recursos aún</td></tr>'}
+  </tbody></table></div>`;
+}
+
+async function renderSolutions(el){
+  const sols=await api('GET','/api/admin/solutions');
+  el.innerHTML=`<div class="adm-title">Soluciones documentadas</div><div class="adm-sub">Soluciones aportadas por los técnicos</div>
+  <div class="tw"><table class="dt"><thead><tr><th>Fecha</th><th>Técnico</th><th>Código</th><th>Marca</th><th>Solución</th><th>Útil</th></tr></thead><tbody>
+    ${sols.map(s=>`<tr>
+      <td style="font-size:11px;color:var(--text2)">${new Date(s.ts).toLocaleDateString('es-ES')}</td>
+      <td>${s.techName}</td>
+      <td><b style="color:var(--orange)">${s.code}</b></td>
+      <td>${s.brand||'—'}</td>
+      <td style="font-size:11px;max-width:300px">${s.solution}</td>
+      <td><span style="color:var(--green)">👍 ${s.helpful}</span></td>
+    </tr>`).join('')||'<tr><td colspan="6" style="color:var(--text3);text-align:center;padding:20px">Sin soluciones documentadas aún</td></tr>'}
+  </tbody></table></div>`;
+}
+
+async function renderIndex(el){
+  const status=await api('GET','/api/index/status');
+  el.innerHTML=`<div class="adm-title">Índice de manuales</div><div class="adm-sub">Estado de los PDFs indexados desde Google Drive</div>
+  <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center">
+    <div class="stat-card" style="padding:12px 20px"><div class="stat-val">${status.total}</div><div class="stat-lbl">Manuales indexados</div></div>
+    <div>
+      ${status.indexedAt?`<div style="font-size:12px;color:var(--text2);margin-bottom:8px">Última indexación: ${new Date(status.indexedAt).toLocaleString('es-ES')}</div>`:'<div style="font-size:12px;color:var(--orange);margin-bottom:8px">⚠ No hay índice todavía</div>'}
+      <button class="btn btn-p" onclick="rebuildIndex(this)"><i class="ti ti-refresh"></i> Reconstruir índice completo</button>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Conecta con Drive y procesa todos los PDFs. Puede tardar varios minutos.</div>
+    </div>
+  </div>
+  <div class="tw"><div class="tw-head"><div class="tw-title">Estado por marca</div></div>
+    <div style="padding:8px 16px">
+    ${status.brands.map(b=>`<div class="idx-brand">
+      <div class="bdt" style="background:${b.c}"></div>
+      <span>${b.n}</span>
+      <span class="idx-count">${b.count?`${b.count} manual${b.count>1?'es':''}`:''}</span>
+      ${!b.count?'<span style="font-size:10px;color:var(--text3)">sin indexar</span>':''}
+    </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+async function rebuildIndex(btn){
+  btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Indexando…';
+  await api('POST','/api/index/build');
+  addAI('Indexación iniciada en segundo plano. Este proceso puede tardar varios minutos dependiendo del número de PDFs. Los manuales estarán disponibles cuando termine.');
+  setTimeout(()=>{btn.disabled=false;btn.innerHTML='<i class="ti ti-refresh"></i> Reconstruir índice completo'; renderIndex(document.getElementById('adm-content'));},3000);
+}
+
+// USERS
+function openMU(){document.getElementById('mu-name').value='';document.getElementById('mu-user').value='';document.getElementById('mu-pass').value='';document.getElementById('mu-err').style.display='none';document.getElementById('modal-user').classList.add('open');}
+function closeMU(){document.getElementById('modal-user').classList.remove('open');}
+async function saveUser(){
+  const name=document.getElementById('mu-name').value.trim(), username=document.getElementById('mu-user').value.trim(), password=document.getElementById('mu-pass').value, role=document.getElementById('mu-role').value;
+  const err=document.getElementById('mu-err'); err.style.display='none';
+  if(!name||!username||!password){err.textContent='Completa todos los campos';err.style.display='block';return;}
+  try{await api('POST','/api/admin/users',{name,username,password,role});closeMU();aTab('users');}
+  catch(e){err.textContent=e.message;err.style.display='block';}
+}
+async function toggleU(id,active){await api('PUT',`/api/admin/users/${id}`,{active});aTab('users');}
+async function deleteU(id){if(!confirm('¿Eliminar?'))return;await api('DELETE',`/api/admin/users/${id}`);aTab('users');}
+
+// RESOURCES
+function openMR(){document.getElementById('mr-title').value='';document.getElementById('mr-url').value='';document.getElementById('mr-code').value='';document.getElementById('mr-err').style.display='none';document.getElementById('modal-res').classList.add('open');}
+function closeMR(){document.getElementById('modal-res').classList.remove('open');}
+async function saveResource(){
+  const title=document.getElementById('mr-title').value.trim(), url=document.getElementById('mr-url').value.trim(), code=document.getElementById('mr-code').value.trim(), brand=document.getElementById('mr-brand').value, type=document.getElementById('mr-type').value;
+  const err=document.getElementById('mr-err'); err.style.display='none';
+  if(!title||!url){err.textContent='Título y URL son obligatorios';err.style.display='block';return;}
+  try{await api('POST','/api/resources',{title,url,code,brand,type});closeMR();aTab('resources');}
+  catch(e){err.textContent=e.message;err.style.display='block';}
+}
+async function deleteRes(id){if(!confirm('¿Eliminar?'))return;await api('DELETE',`/api/resources/${id}`);aTab('resources');}
+
+// ── API ──────────────────────────────────────────────────────────────────────
+async function api(method,url,body){
+  const r=await fetch(API+url,{method,headers:{'Content-Type':'application/json'},credentials:'same-origin',body:body?JSON.stringify(body):undefined});
+  const d=await r.json();
+  if(!r.ok)throw new Error(d.error||'Error del servidor');
+  return d;
+}
+
+// AUTO-LOGIN CHECK
+(async()=>{try{const r=await api('GET','/api/me');me=r.user;initApp();}catch{}})();
+</script>
+</body>
+</html>
