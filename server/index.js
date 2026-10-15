@@ -4,6 +4,7 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { OpenAI } = require('openai');
 const { load, save } = require('./db');
 const { buildIndex, searchManuals, getBrandManuals, loadIndex, BRANDS, extractRelevantContext } = require('./indexer'); // OneDrive via Microsoft Graph
@@ -23,7 +24,22 @@ for (const method of ['get', 'post', 'put', 'delete']) {
     try { Promise.resolve(fn(req,res,next)).catch(next); } catch (error) { next(error); }
   }));
 }
-if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 24) throw new Error('SESSION_SECRET debe tener al menos 24 caracteres');
+function resolveSessionSecret() {
+  const configured = process.env.SESSION_SECRET || '';
+  if (configured.length >= 24) return configured;
+
+  const privateSeed = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.OPENAI_API_KEY || '';
+  if (!configured || !privateSeed) {
+    throw new Error('Configura SESSION_SECRET con al menos 24 caracteres');
+  }
+
+  console.warn('SESSION_SECRET heredado: se deriva un secreto fuerte para esta instancia');
+  return crypto
+    .createHash('sha256')
+    .update(configured + '\0' + privateSeed + '\0davofrio-session-v1')
+    .digest('hex');
+}
+const sessionSecret = resolveSessionSecret();
 if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1);
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -31,7 +47,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 8 * 60 * 60 * 1000, httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' }
