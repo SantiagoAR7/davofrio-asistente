@@ -1,3 +1,4 @@
+const { writeJson } = require('./jsonStore');
 /**
  * MEMORIA DE SOLUCIONES
  * Cuando un técnico resuelve una avería, guarda cómo la solucionó.
@@ -13,7 +14,7 @@ function load() {
   return JSON.parse(fs.readFileSync(SOL_PATH));
 }
 function save(data) {
-  fs.writeFileSync(SOL_PATH, JSON.stringify(data, null, 2));
+  writeJson(SOL_PATH, data);
 }
 
 // Add a new solution

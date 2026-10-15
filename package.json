@@ -5,16 +5,28 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node server/index.js"
+    "dev": "node server/index.js",
+    "test": "node --test tests/*.test.js",
+    "audit:rag": "node scripts/audit-rag.js",
+    "audit:rag:live": "node scripts/audit-rag.js --live",
+    "index:rag": "node server/build-rag-supabase.js"
   },
   "dependencies": {
+    "@dqbd/tiktoken": "^1.0.22",
+    "@supabase/supabase-js": "^2.108.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
-    "googleapis": "^126.0.1",
+    "googleapis": "^182.0.0",
     "openai": "^4.28.0",
     "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.1"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

@@ -1,0 +1,21 @@
+const test=require('node:test');const assert=require('node:assert/strict');const fs=require('fs');const path=require('path');const vm=require('vm');const {createRequire}=require('module');
+const file=path.resolve(__dirname,'../server/index.js'),realRequire=createRequire(file);const bcrypt=realRequire('bcryptjs');
+let db={users:[{id:1,username:'admin',name:'Admin',role:'admin',active:true,password:bcrypt.hashSync('test-password',4)},{id:2,username:'tech',name:'Tech',role:'tecnico',active:true,password:bcrypt.hashSync('test-password',4)}],history:[]};
+let failRag=false;
+const mocks={'dotenv':{config(){}},'openai':{OpenAI:class{}},'./db':{load:()=>structuredClone(db),save:d=>{db=structuredClone(d);}},'./indexer':{BRANDS:[],loadIndex:()=>({manuals:[]})},'./rag':{answerWithRAG:async()=>{if(failRag)throw new Error('provider unavailable');return {answer:'<p>Diagnóstico [1]</p>',sources:[],evidenceStatus:'supported'};}},'./ragAdmin':{getStatus:async()=>({total:1,brands:[],job:{status:'idle'}}),startBuild:()=>true},'./solutions':{getSolutions:()=>[]},'./resources':{getResources:()=>[]},'./ot':{getOT:()=>null}};
+const sandbox={require:n=>Object.hasOwn(mocks,n)?mocks[n]:realRequire(n),module:{exports:{}},__dirname:path.dirname(file),console,process:{env:{OPENAI_API_KEY:'test',SESSION_SECRET:'a-long-test-secret-at-least-24-characters'}}};
+vm.runInNewContext(fs.readFileSync(file,'utf8'),sandbox,{filename:file});const {app}=sandbox.module.exports;
+let server,base;
+test.before(async()=>{server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));base='http://127.0.0.1:'+server.address().port;});
+test.after(()=>new Promise(r=>server.close(r)));
+async function request(route,{method='GET',body,cookie}={}){return fetch(base+route,{method,headers:{'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:body?JSON.stringify(body):undefined});}
+async function login(user){const r=await request('/api/login',{method:'POST',body:{username:user,password:'test-password'}});assert.equal(r.status,200);return r.headers.get('set-cookie').split(';')[0];}
+test('malformed login returns 400 and server stays alive',async()=>{assert.equal((await request('/api/login',{method:'POST',body:{}})).status,400);assert.equal((await request('/api/me')).status,401);});
+test('non-admin cannot access administrative routes',async()=>{const cookie=await login('tech');assert.equal((await request('/api/admin/users',{cookie})).status,403);});
+test('disabled account loses an existing authenticated session',async()=>{const cookie=await login('tech');db.users[1].active=false;assert.equal((await request('/api/me',{cookie})).status,401);db.users[1].active=true;});
+test('deleted account loses an existing authenticated session',async()=>{const cookie=await login('tech');const user=db.users.pop();assert.equal((await request('/api/me',{cookie})).status,401);db.users.push(user);});
+test('password change revokes existing sessions',async()=>{const admin=await login('admin'),tech=await login('tech');const r=await request('/api/admin/users/2',{method:'PUT',cookie:admin,body:{password:'new-test-password'}});assert.equal(r.status,200);assert.equal((await request('/api/me',{cookie:tech})).status,401);db.users[1].password=bcrypt.hashSync('test-password',4);});
+test('role change immediately removes admin privileges',async()=>{const cookie=await login('admin');db.users[0].role='tecnico';assert.equal((await request('/api/admin/users',{cookie})).status,403);db.users[0].role='admin';});
+test('invalid query history returns 400',async()=>{const cookie=await login('tech');assert.equal((await request('/api/query',{method:'POST',cookie,body:{query:'HTW E1',history:[null]}})).status,400);});
+test('provider failures return 503 without inventing a fallback answer',async()=>{const cookie=await login('tech');failRag=true;const r=await request('/api/query',{method:'POST',cookie,body:{query:'HTW E1'}});assert.equal(r.status,503);assert.equal((await r.json()).answer,undefined);failRag=false;});
+test('successful query saves an auditable answer',async()=>{const cookie=await login('tech');const r=await request('/api/query',{method:'POST',cookie,body:{query:'HTW E1'}});assert.equal(r.status,200);assert.equal(db.history.at(-1).evidenceStatus,'supported');});

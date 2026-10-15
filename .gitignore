@@ -1,5 +1,14 @@
 node_modules/
+credentials.json
 data/drive_token.json
 data/db.json
 data/manual_index.json
+data/supabase_index_state.json
+data/knowledge_state.json
+data/ot.json
+data/qa_results.json
+data/rag_*.json
+.codex-backup-*/
+validation/
+.DS_Store
 .env

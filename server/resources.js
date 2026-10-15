@@ -1,3 +1,4 @@
+const { writeJson } = require('./jsonStore');
 /**
  * RECURSOS (vídeos por código de error)
  * El admin asocia vídeos a códigos de error específicos.
@@ -11,7 +12,7 @@ function load() {
   if (!fs.existsSync(RES_PATH)) return { resources: [] };
   return JSON.parse(fs.readFileSync(RES_PATH));
 }
-function save(data) { fs.writeFileSync(RES_PATH, JSON.stringify(data, null, 2)); }
+function save(data) { writeJson(RES_PATH, data); }
 
 function addResource({ code, brand, manualUid, title, url, type, uploadedBy }) {
   const db = load();

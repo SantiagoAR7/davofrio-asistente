@@ -1,27 +1,10 @@
-const fs = require('fs');
 const path = require('path');
-
-const DB_PATH = path.join(__dirname, '../data/db.json');
-
+const { readJson, writeJson } = require('./jsonStore');
+const DB_PATH = path.join(process.env.DATA_DIR || path.join(__dirname, '../data'), 'db.json');
 function load() {
-  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-  if (!fs.existsSync(DB_PATH)) {
-    var initial = { users: [], history: [] };
-    fs.writeFileSync(DB_PATH, JSON.stringify(initial, null, 2));
-    return initial;
-  }
-  try {
-    return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-  } catch(e) {
-    var fresh = { users: [], history: [] };
-    fs.writeFileSync(DB_PATH, JSON.stringify(fresh, null, 2));
-    return fresh;
-  }
+  const data = readJson(DB_PATH, { users: [], history: [] });
+  if (!Array.isArray(data.users) || !Array.isArray(data.history)) throw new Error('Estructura de base de datos inválida');
+  return data;
 }
-
-function save(data) {
-  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-}
-
+function save(data) { writeJson(DB_PATH, data); }
 module.exports = { load, save };
