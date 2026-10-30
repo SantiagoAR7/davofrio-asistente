@@ -54,6 +54,8 @@ async function answerWithRAG(query, options = {}) {
   const retrievalQuery = [options.brand, options.modelName, !analysis.errorCode && !analysis.model ? previous : '', query].filter(Boolean).join(' ');
   const results = await hybridSearch(retrievalQuery, { topK: options.topK ?? 12, brand: options.brand || null });
   const evidence = selectEvidence(results, retrievalQuery, {...options,modelName:options.modelName || analysis.model}).slice(0, 6);
+  const evidenceBrands = new Set(evidence.map(r => (r.chunk.metadata.brand || '').toUpperCase()).filter(Boolean));
+  if (!options.brand && !analysis.brand && evidenceBrands.size > 1) return {answer:renderDiagnostic({symptom:analysis.errorCode || query,description:'El mismo código aparece en manuales de varias marcas y su significado no es universal. No es seguro mezclar sus diagnósticos.',checks:['Indica la marca y el modelo exacto del equipo para recuperar el procedimiento correcto.']}),sources:[],results:[],evidenceStatus:'ambiguous'};
   const families = new Set(evidence.map(r => detectEquipmentType(`${r.chunk.metadata.fileName || ''} ${r.chunk.metadata.folderPath || ''}`)).filter(Boolean));
   if (!options.modelName && !analyzeQuery(retrievalQuery).equipmentType && families.size > 1) return {answer:renderDiagnostic({symptom:analysis.errorCode || query,description:'El código o síntoma aparece en manuales de distintas familias de equipos. No es seguro asociarlo a un procedimiento sin identificar el equipo.',checks:['Indica la marca, el modelo exacto y el tipo de equipo para seleccionar el manual correcto.']}),sources:[],results:[],evidenceStatus:'ambiguous'};
   const sources = evidence.map(r => ({ fileId: r.chunk.metadata.fileId, chunkId: r.chunk.id,

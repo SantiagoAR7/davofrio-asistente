@@ -117,3 +117,8 @@ test('different equipment families trigger clarification without generation',asy
  const {answerWithRAG}=load('rag.js',{...baseMocks,'./supabaseHybridRetriever':{hybridSearch:async()=>[a,b]}});
  assert.equal((await answerWithRAG('HTW E1')).evidenceStatus,'ambiguous');
 });
+test('the same code across brands requires brand clarification',async()=>{
+ const a=result('E4 fallo'),b=result('E4 fallo');a.chunk.metadata.brand='HTW';b.chunk.metadata.brand='DAIKIN';
+ const {answerWithRAG}=load('rag.js',{...baseMocks,'./supabaseHybridRetriever':{hybridSearch:async()=>[a,b]}});
+ const response=await answerWithRAG('E4');assert.equal(response.evidenceStatus,'ambiguous');assert.match(response.answer,/marca y el modelo/i);
+});

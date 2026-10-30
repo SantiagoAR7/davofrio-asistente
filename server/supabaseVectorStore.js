@@ -240,13 +240,16 @@ async function runVectorSearch({ embedding, topK, brand }) {
 }
 
 async function runCodeSearch({ errorCode, topK, brand }) {
-  if (!errorCode || !brand) return [];
+  if (!errorCode) return [];
   // The old RPC misses codes present in content. Search content as well as filenames.
   const variants = [errorCode,errorCode.replace(/([A-Z]+)([0-9]+)/,'$1-$2'),errorCode.replace(/([A-Z]+)([0-9]+)/,'$1 $2')];
   const columns = 'id,file_id,file_name,folder_path,brand,web_url,chunk_index,content,document_type,rag_priority,method,readable';
+  const contentQuery = supabase.from('rag_chunks').select(columns).or(variants.map(code=>'content.ilike.%'+code+'%').join(',')).limit(200);
+  const fileQuery = supabase.from('rag_chunks').select(columns).ilike('file_name','%'+errorCode+'%').limit(60);
+  if (brand) { contentQuery.eq('brand',brand); fileQuery.eq('brand',brand); }
   const responses = await Promise.all([
-    supabase.from('rag_chunks').select(columns).eq('brand',brand).or(variants.map(code=>'content.ilike.%'+code+'%').join(',')).limit(200),
-    supabase.from('rag_chunks').select(columns).eq('brand',brand).ilike('file_name','%'+errorCode+'%').limit(60),
+    contentQuery,
+    fileQuery,
     supabase.rpc('match_rag_chunks_code_brand',{p_error_code:errorCode,p_filter_brand:brand,p_match_count:Math.max(topK,12)})
   ]);
   const matcher = new RegExp('(?:^|[^A-Z0-9])' + errorCode.replace(/([A-Z]+)([0-9]+)/, '$1[-_ ]?$2') + '(?=$|[^A-Z0-9])');
@@ -266,19 +269,21 @@ async function searchSupabaseVector(query, options = {}) {
   const analysis = analyzeQuery(query);
   const brand = options.brand || analysis.brand || null;
 
-  const embedding = await embedQuery(query);
-
   const codeData = await runCodeSearch({
   errorCode: analysis.errorCode,
   topK: Math.max(topK, 5),
   brand
 });
 
-const vectorData = await runVectorSearch({
-  embedding,
-  topK: Math.max(topK * 2, 8),
-  brand
-});
+let vectorData = [];
+try {
+  const embedding = await embedQuery(query);
+  vectorData = await runVectorSearch({embedding,topK:Math.max(topK * 2,8),brand});
+} catch (error) {
+  // An exact documented code remains usable when the embedding provider is unavailable.
+  if (!codeData.length) throw error;
+  console.warn('Búsqueda vectorial no disponible; se usa coincidencia literal:', error.message);
+}
 
 const merged = [...codeData, ...vectorData];
 
@@ -289,5 +294,5 @@ module.exports = {
   supabase,
   upsertChunks,
   deleteFileChunks,
-  searchSupabaseVector, normalizeResults
+  searchSupabaseVector, normalizeResults, runCodeSearch
 };
