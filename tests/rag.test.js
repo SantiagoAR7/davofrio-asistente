@@ -52,15 +52,24 @@ test('model mismatch and wrong brand fail closed',()=>{
   assert.equal(selectEvidence([result('E1')],'Daikin E1').length,0);
 });
 test('no evidence skips generation entirely',async()=>{
-  const {answerWithRAG}=load('rag.js',baseMocks);const r=await answerWithRAG('HTW E999');assert.equal(r.evidenceStatus,'insufficient');assert.equal(r.sources.length,0);
+  const {answerWithRAG}=load('rag.js',baseMocks);const r=await answerWithRAG('HTW E999');assert.equal(r.evidenceStatus,'insufficient');assert.equal(r.sources.length,0);assert.match(r.answer,/Síntoma \(error\/problema\).*Descripción.*Comprobación/s);
 });
 test('OT, previous solutions and conversation reach the single generation',async()=>{
   let calls=0,prompt;
   const {answerWithRAG}=load('rag.js',{...baseMocks,
     './supabaseHybridRetriever':{hybridSearch:async()=>[result('E1 fallo documentado')]},
-    'openai':{OpenAI:class{constructor(){this.chat={completions:{create:async args=>{calls++;prompt=JSON.stringify(args);return {choices:[{message:{content:'<p>Respuesta [1]</p>'}}]}}}}}}}});
+    'openai':{OpenAI:class{constructor(){this.chat={completions:{create:async args=>{calls++;prompt=JSON.stringify(args);return {choices:[{message:{content:JSON.stringify({symptom:'E1 [1]',description:'Fallo documentado [1]',checks:['Comprobar conexión [1]']})}}]}}}}}}}});
   const answer=await answerWithRAG('HTW E1',{otContext:'OT_SENTINEL',pastSolutions:[{solution:'SOLUTION_SENTINEL'}],history:[{role:'user',content:'HISTORY_SENTINEL'}]});
-  assert.equal(calls,1);for(const s of ['OT_SENTINEL','SOLUTION_SENTINEL','HISTORY_SENTINEL'])assert(prompt.includes(s));assert.equal(answer.sources.length,1);
+  assert.equal(calls,1);for(const s of ['OT_SENTINEL','SOLUTION_SENTINEL','HISTORY_SENTINEL'])assert(prompt.includes(s));assert.equal(answer.sources.length,1);assert.match(answer.answer,/Síntoma \(error\/problema\).*Descripción.*Comprobación/s);
+});
+test('diagnostic contract rejects malformed or incomplete model output',()=>{
+  const {parseDiagnostic}=load('rag.js',baseMocks);
+  assert.throws(()=>parseDiagnostic('<p>texto libre</p>'),/formato inválido/);
+  assert.throws(()=>parseDiagnostic(JSON.stringify({symptom:'E1',description:'Fallo',checks:[]})),/incompleto/);
+});
+test('diagnostic renderer escapes model content and always emits the three sections',()=>{
+  const {renderDiagnostic}=load('rag.js',baseMocks);const html=renderDiagnostic({symptom:'<img>',description:'Fallo',checks:['<script>']});
+  assert.match(html,/Síntoma \(error\/problema\).*Descripción.*Comprobación/s);assert(!html.includes('<img>'));assert(!html.includes('<script>'));
 });
 test('corrupt JSON is never overwritten',()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'davo-db-'));const file=path.join(dir,'db.json');fs.writeFileSync(file,'broken');
