@@ -10,7 +10,11 @@ const { embedTexts } = require('./vectorStore');
 const { supabase } = require('./supabaseVectorStore');
 const { detectDocumentBrand } = require('./queryAnalyzer');
 const { readJson, writeJson } = require('./jsonStore');
-const STATE_PATH = path.join(__dirname, '../data/supabase_index_state.json');
+const STATE_PATH = process.env.RAG_STATE_PATH
+  ? path.resolve(process.env.RAG_STATE_PATH)
+  : path.join(__dirname, '../data/supabase_index_state.json');
+const REPLACE_RPC = process.env.RAG_REPLACE_RPC || 'replace_rag_file';
+if (!/^[a-z][a-z0-9_]*$/.test(REPLACE_RPC)) throw new Error('RAG_REPLACE_RPC inválido');
 
 const DATA_DIR = path.join(__dirname, '../data');
 const INVENTORY_PATH = path.join(DATA_DIR, 'rag_inventory_filtered.json');
@@ -112,7 +116,7 @@ async function indexOnePDF(pdf, indexNumber, total) {
     await sleep(300);
   }
 
-  const {error} = await supabase.rpc('replace_rag_file', {p_file_id:pdf.id,p_rows:allRows});
+  const {error} = await supabase.rpc(REPLACE_RPC, {p_file_id:pdf.id,p_rows:allRows});
   if (error) throw new Error('No se pudo reemplazar el manual atómicamente: ' + error.message);
 
   console.log(
@@ -131,6 +135,8 @@ async function indexOnePDF(pdf, indexNumber, total) {
 async function main(onProgress = () => {}) {
   console.log('BUILD RAG SUPABASE');
   console.log('Inventario:', INVENTORY_PATH);
+  console.log('Destino RPC:', REPLACE_RPC);
+  console.log('Estado:', STATE_PATH);
   console.log('Límite tanda:', LIMIT);
   console.log('Empezar desde índice:', START_FROM);
 
@@ -139,7 +145,7 @@ async function main(onProgress = () => {}) {
   const startFrom = process.env.RAG_START_FROM === undefined ? state.nextStartFrom : START_FROM;
   if (!Number.isInteger(startFrom) || startFrom < 0 || !Number.isInteger(LIMIT) || LIMIT < 1) throw new Error('Límites de indexación inválidos');
   // Check the atomic RPC before downloading PDFs or spending on embeddings. This probe cannot mutate any file.
-  const probe = await supabase.rpc('replace_rag_file',{p_file_id:null,p_rows:[]});
+  const probe = await supabase.rpc(REPLACE_RPC,{p_file_id:null,p_rows:[]});
   if (!probe.error || !probe.error.message.includes('A nonempty file replacement is required')) {
     throw new Error('Instala migrations/001_rag_atomic.sql antes de indexar');
   }

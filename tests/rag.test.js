@@ -106,6 +106,12 @@ test('complete embeddings are prepared before one atomic replacement',async()=>{
   await indexer.indexOnePDF({id:'f',name:'HTW.pdf',size:1},1,1);assert.equal(calls.at(-1),'replace_rag_file');assert.equal(calls.filter(x=>x==='replace_rag_file').length,1);
 });
 
+test('staging indexing uses the configured replacement RPC',async()=>{
+ const calls=[];
+ const indexer=load('build-rag-supabase.js',{'dotenv':{config(){}},'./onedrive':{downloadPDF:async()=>Buffer.from('pdf')},'./pdfExtractor':{extractPDFText:async()=>({text:'E4 fallo '.repeat(100),chars:900,complete:true})},'./vectorStore':{embedTexts:async texts=>texts.map(()=>[0.1,0.2])},'./supabaseVectorStore':{supabase:{rpc:async name=>{calls.push(name);return {data:1};}}}},{process:{env:{RAG_REPLACE_RPC:'replace_rag_file_v2'}}});
+ await indexer.indexOnePDF({id:'f',name:'HTW E4.pdf',size:1},1,1);assert.deepEqual(calls,['replace_rag_file_v2']);
+});
+
 test('generic brand folders do not mislabel unrelated manuals',()=>{
  assert.equal(analyzer.detectDocumentBrand({name:'Manual.pdf',folderPath:'Documentos/_HTW Y OTRAS MARCAS/Equipo'}),'DESCONOCIDA');
  assert.equal(analyzer.detectDocumentBrand({name:'Panasonic.pdf',folderPath:'Documentos/_HTW Y OTRAS MARCAS'}),'PANASONIC');
