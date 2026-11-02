@@ -51,6 +51,18 @@ async function answerWithRAG(query, options = {}) {
   // Use only the latest user context for retrieval; assistant prose must not introduce codes.
   const previous = history.filter(h => h.role === 'user' && h.content !== query).slice(-2).map(h => h.content).join(' ');
   const analysis = analyzeQuery(query);
+  if (analysis.errorCode && !options.brand && !analysis.brand) {
+    return {
+      answer: renderDiagnostic({
+        symptom: analysis.errorCode,
+        description: 'El significado de un código de error depende de la marca y del equipo. No es seguro seleccionar un manual ni indicar un procedimiento sin identificarlo.',
+        checks: ['Indica la marca y el modelo exacto, además del tipo de equipo, para recuperar el procedimiento documentado correcto.']
+      }),
+      sources: [],
+      results: [],
+      evidenceStatus: 'ambiguous'
+    };
+  }
   const retrievalQuery = [options.brand, options.modelName, !analysis.errorCode && !analysis.model ? previous : '', query].filter(Boolean).join(' ');
   const results = await hybridSearch(retrievalQuery, { topK: options.topK ?? 12, brand: options.brand || null });
   const evidence = selectEvidence(results, retrievalQuery, {...options,modelName:options.modelName || analysis.model}).slice(0, 6);

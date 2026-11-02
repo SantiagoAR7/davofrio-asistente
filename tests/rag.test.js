@@ -122,3 +122,9 @@ test('the same code across brands requires brand clarification',async()=>{
  const {answerWithRAG}=load('rag.js',{...baseMocks,'./supabaseHybridRetriever':{hybridSearch:async()=>[a,b]}});
  const response=await answerWithRAG('E4');assert.equal(response.evidenceStatus,'ambiguous');assert.match(response.answer,/marca y el modelo/i);
 });
+test('an error code without a brand always asks for equipment identity before retrieval',async()=>{
+ let retrievals=0;
+ const {answerWithRAG}=load('rag.js',{...baseMocks,'./supabaseHybridRetriever':{hybridSearch:async()=>{retrievals++;return [result('E4 fallo')]}}});
+ const response=await answerWithRAG('error E4');
+ assert.equal(response.evidenceStatus,'ambiguous');assert.equal(retrievals,0);assert.match(response.answer,/marca y el modelo exacto.*tipo de equipo/i);
+});
