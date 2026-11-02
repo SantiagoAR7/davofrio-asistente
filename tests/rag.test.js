@@ -112,6 +112,13 @@ test('staging indexing uses the configured replacement RPC',async()=>{
  await indexer.indexOnePDF({id:'f',name:'HTW E4.pdf',size:1},1,1);assert.deepEqual(calls,['replace_rag_file_v2']);
 });
 
+test('staging migration is isolated from the active table',()=>{
+ const sql=fs.readFileSync(path.resolve(__dirname,'../migrations/002_rag_v2_staging.sql'),'utf8');
+ assert.match(sql,/CREATE TABLE public\.rag_chunks_v2/);
+ assert.match(sql,/DELETE FROM public\.rag_chunks_v2/);
+ assert.doesNotMatch(sql,/DELETE FROM public\.rag_chunks(?:\s|;)/);
+});
+
 test('generic brand folders do not mislabel unrelated manuals',()=>{
  assert.equal(analyzer.detectDocumentBrand({name:'Manual.pdf',folderPath:'Documentos/_HTW Y OTRAS MARCAS/Equipo'}),'DESCONOCIDA');
  assert.equal(analyzer.detectDocumentBrand({name:'Panasonic.pdf',folderPath:'Documentos/_HTW Y OTRAS MARCAS'}),'PANASONIC');

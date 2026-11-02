@@ -141,7 +141,8 @@ async function main(onProgress = () => {}) {
   console.log('Empezar desde índice:', START_FROM);
 
   const pdfs = loadInventory();
-  const state = readJson(STATE_PATH,{nextStartFrom:0});
+  const state = readJson(STATE_PATH,{nextStartFrom:0,failures:{}});
+  const failures = state.failures && typeof state.failures === 'object' ? {...state.failures} : {};
   const startFrom = process.env.RAG_START_FROM === undefined ? state.nextStartFrom : START_FROM;
   if (!Number.isInteger(startFrom) || startFrom < 0 || !Number.isInteger(LIMIT) || LIMIT < 1) throw new Error('Límites de indexación inválidos');
   // Check the atomic RPC before downloading PDFs or spending on embeddings. This probe cannot mutate any file.
@@ -162,16 +163,23 @@ async function main(onProgress = () => {}) {
     try {
       await indexOnePDF(pdf, i + 1, pdfs.length);
       indexed++;
-      writeJson(STATE_PATH,{nextStartFrom:i+1,updatedAt:new Date().toISOString()});
+      delete failures[pdf.id];
     } catch (err) {
       errors++;
       console.error(`ERROR en ${pdf.name}: ${err.message}`);
-      onProgress({processed:processed+1,indexed,errors,error:err.message});
-      return {processed:processed+1,indexed,errors,nextStartFrom:i,error:err.message};
+      const previousFailure = failures[pdf.id] || {};
+      failures[pdf.id] = {
+        fileName: pdf.name,
+        index: i,
+        attempts: Number(previousFailure.attempts || 0) + 1,
+        error: err.message,
+        updatedAt: new Date().toISOString()
+      };
     }
 
     processed++;
-    onProgress({processed,indexed,errors});
+    writeJson(STATE_PATH,{nextStartFrom:i+1,updatedAt:new Date().toISOString(),failures});
+    onProgress({processed,indexed,errors,error:failures[pdf.id]?.error});
     await sleep(500);
   }
 
