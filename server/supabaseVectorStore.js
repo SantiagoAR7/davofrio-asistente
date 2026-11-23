@@ -250,11 +250,12 @@ async function runCodeSearch({ errorCode, topK, brand }) {
   const contentQuery = supabase.from(RAG_TABLE).select(columns).or(variants.map(code=>'content.ilike.%'+code+'%').join(',')).limit(200);
   const fileQuery = supabase.from(RAG_TABLE).select(columns).ilike('file_name','%'+errorCode+'%').limit(60);
   if (brand) { contentQuery.eq('brand',brand); fileQuery.eq('brand',brand); }
-  const responses = await Promise.all([
-    contentQuery,
-    fileQuery,
-    supabase.rpc('match_rag_chunks_code_brand' + RAG_RPC_SUFFIX,{p_error_code:errorCode,p_filter_brand:brand,p_match_count:Math.max(topK,12)})
-  ]);
+  // The v2 index has a compact, indexed code lookup. Avoid scanning hundreds of
+  // thousands of large content fields through PostgREST on every diagnosis.
+  const branches = RAG_TABLE === 'rag_chunks_v2'
+    ? [fileQuery, supabase.rpc('match_rag_chunks_code_brand_v2',{p_error_code:errorCode,p_filter_brand:brand,p_match_count:Math.max(topK,12)})]
+    : [contentQuery, fileQuery, supabase.rpc('match_rag_chunks_code_brand',{p_error_code:errorCode,p_filter_brand:brand,p_match_count:Math.max(topK,12)})];
+  const responses = await Promise.all(branches);
   const matcher = new RegExp('(?:^|[^A-Z0-9])' + errorCode.replace(/([A-Z]+)([0-9]+)/, '$1[-_ ]?$2') + '(?=$|[^A-Z0-9])');
   const rows=[];
   if (responses.every(r=>r.error)) throw new Error('Búsqueda literal no disponible: ' + responses[0].error.message);
