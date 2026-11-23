@@ -6,6 +6,9 @@ const { analyzeQuery } = require('./queryAnalyzer');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const RAG_TABLE = process.env.RAG_TABLE || 'rag_chunks';
+if (!['rag_chunks', 'rag_chunks_v2'].includes(RAG_TABLE)) throw new Error('RAG_TABLE inválida');
+const RAG_RPC_SUFFIX = RAG_TABLE === 'rag_chunks_v2' ? '_v2' : '';
 
 if (!SUPABASE_URL) throw new Error('Falta SUPABASE_URL en .env');
 if (!SUPABASE_SERVICE_ROLE_KEY) throw new Error('Falta SUPABASE_SERVICE_ROLE_KEY en .env');
@@ -30,7 +33,7 @@ async function upsertChunks(rows) {
   if (!rows.length) return { count: 0 };
 
   const { error } = await supabase
-    .from('rag_chunks')
+    .from(RAG_TABLE)
     .upsert(rows, { onConflict: 'id' });
 
   if (error) throw error;
@@ -40,7 +43,7 @@ async function upsertChunks(rows) {
 
 async function deleteFileChunks(fileId) {
   const { error } = await supabase
-    .from('rag_chunks')
+    .from(RAG_TABLE)
     .delete()
     .eq('file_id', fileId);
 
@@ -228,7 +231,7 @@ function normalizeResults(data, expectedBrand = null, analysis = {}) {
 }
 
 async function runVectorSearch({ embedding, topK, brand }) {
-  const { data, error } = await supabase.rpc('match_rag_chunks_brand', {
+  const { data, error } = await supabase.rpc('match_rag_chunks_brand' + RAG_RPC_SUFFIX, {
     p_query_embedding: embedding,
     p_match_count: topK,
     p_filter_brand: brand
@@ -244,13 +247,13 @@ async function runCodeSearch({ errorCode, topK, brand }) {
   // The old RPC misses codes present in content. Search content as well as filenames.
   const variants = [errorCode,errorCode.replace(/([A-Z]+)([0-9]+)/,'$1-$2'),errorCode.replace(/([A-Z]+)([0-9]+)/,'$1 $2')];
   const columns = 'id,file_id,file_name,folder_path,brand,web_url,chunk_index,content,document_type,rag_priority,method,readable';
-  const contentQuery = supabase.from('rag_chunks').select(columns).or(variants.map(code=>'content.ilike.%'+code+'%').join(',')).limit(200);
-  const fileQuery = supabase.from('rag_chunks').select(columns).ilike('file_name','%'+errorCode+'%').limit(60);
+  const contentQuery = supabase.from(RAG_TABLE).select(columns).or(variants.map(code=>'content.ilike.%'+code+'%').join(',')).limit(200);
+  const fileQuery = supabase.from(RAG_TABLE).select(columns).ilike('file_name','%'+errorCode+'%').limit(60);
   if (brand) { contentQuery.eq('brand',brand); fileQuery.eq('brand',brand); }
   const responses = await Promise.all([
     contentQuery,
     fileQuery,
-    supabase.rpc('match_rag_chunks_code_brand',{p_error_code:errorCode,p_filter_brand:brand,p_match_count:Math.max(topK,12)})
+    supabase.rpc('match_rag_chunks_code_brand' + RAG_RPC_SUFFIX,{p_error_code:errorCode,p_filter_brand:brand,p_match_count:Math.max(topK,12)})
   ]);
   const matcher = new RegExp('(?:^|[^A-Z0-9])' + errorCode.replace(/([A-Z]+)([0-9]+)/, '$1[-_ ]?$2') + '(?=$|[^A-Z0-9])');
   const rows=[];
@@ -292,6 +295,7 @@ return normalizeResults(merged, brand, analysis).slice(0, topK);
 
 module.exports = {
   supabase,
+  RAG_TABLE,
   upsertChunks,
   deleteFileChunks,
   searchSupabaseVector, normalizeResults, runCodeSearch

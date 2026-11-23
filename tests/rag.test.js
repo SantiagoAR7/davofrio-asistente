@@ -38,6 +38,10 @@ test('spaced and hyphenated error codes normalize',()=>{assert.equal(analyzer.an
 test('gas alone does not classify equipment as a water heater',()=>assert.equal(analyzer.detectEquipmentType('Daikin fuga de gas'),null));
 const clientMock={'dotenv':{config(){}},'openai':{OpenAI:class{}},'@supabase/supabase-js':{createClient(){return {}}}};
 const {normalizeResults}=load('supabaseVectorStore.js',clientMock);
+test('RAG v2 can be selected explicitly',()=>{
+ const store=load('supabaseVectorStore.js',clientMock,{process:{env:{OPENAI_API_KEY:'test',SUPABASE_URL:'https://example.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'test',RAG_TABLE:'rag_chunks_v2'}}});
+ assert.equal(store.RAG_TABLE,'rag_chunks_v2');
+});
 const row=(id,content='E1 fallo')=>({id,file_id:'f',file_name:'Manual',brand:'HTW',chunk_index:id,content,score:0.8});
 test('literal/vector duplicate does not displace distinct evidence',()=>{
   const r=normalizeResults([row(1),row(1),row(2,'E1 segunda evidencia')],'HTW',{errorCode:'E1'});assert.equal(r.length,2);assert.equal(r[0].chunk.id,1);
